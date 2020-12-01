@@ -17,8 +17,8 @@ type routeHandler struct {
 }
 
 type RouteDefinition struct {
-	Method string
-	Route string
+	Method   string
+	Route    string
 	Handlers []routeHandler
 }
 
@@ -44,7 +44,7 @@ func ExtractRoutes(r martini.Router) RouteDefinitions {
 	var routes []RouteDefinition
 
 	rv := reflect.ValueOf(r)  // Router interface to *router
-	rv = reflect.Indirect(rv)  // *router to router
+	rv = reflect.Indirect(rv) // *router to router
 	rRoutes := rv.FieldByName("routes")
 	for i := 0; i < rRoutes.Len(); i++ {
 		routes = append(routes, collectRoute(rRoutes.Index(i)))
@@ -53,7 +53,7 @@ func ExtractRoutes(r martini.Router) RouteDefinitions {
 }
 
 func collectRoute(rv reflect.Value) RouteDefinition {
-	rRoute := reflect.Indirect(rv)  // *route to route
+	rRoute := reflect.Indirect(rv) // *route to route
 
 	rPattern := rRoute.FieldByName("pattern")
 	pattern := reflect.NewAt(rPattern.Type(), unsafe.Pointer(rPattern.UnsafeAddr())).Elem().Interface().(string)
@@ -63,7 +63,7 @@ func collectRoute(rv reflect.Value) RouteDefinition {
 
 	routeDef := RouteDefinition{
 		Method: method,
-		Route: pattern,
+		Route:  pattern,
 	}
 
 	for i := 0; i < rHandlers.Len(); i++ {
