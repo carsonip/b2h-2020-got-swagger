@@ -1,8 +1,8 @@
 package hack
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/go-martini/martini"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,18 +10,19 @@ import (
 	"regexp"
 	"runtime"
 	"unsafe"
-	"encoding/json"
+
+	"github.com/go-martini/martini"
 )
 
 type routeHandler struct {
 	Path     string `json:"path"`
-	LineNo   int `json:"lineNo"`
+	LineNo   int    `json:"lineNo"`
 	FuncName string `json:"funcName"`
 }
 
 type RouteDefinition struct {
-	Method string `json:"method"`
-	Route string `json:"route"`
+	Method   string         `json:"method"`
+	Route    string         `json:"route"`
 	Handlers []routeHandler `json:"handlers"`
 }
 
@@ -67,7 +68,6 @@ func collectRoute(rv reflect.Value) RouteDefinition {
 	method := reflect.NewAt(rMethod.Type(), unsafe.Pointer(rMethod.UnsafeAddr())).Elem().Interface().(string)
 	rHandlers := rRoute.FieldByName("handlers")
 
-
 	return newRoute(method, pattern, rHandlers)
 }
 
@@ -106,6 +106,98 @@ func getHandlerFuncName(rHandler reflect.Value) (string, int, string) {
 	q := rHandler.Elem()
 
 	return GetFileLineName(q.Interface())
+}
+
+func ExtractRoutesDatarouter(r interface{}) RouteDefinitions {
+	var routes []RouteDefinition
+	rv := reflect.ValueOf(r) // datarouter.Router (as interface{}) to *datarouter.routerImpl
+	rv = reflect.Indirect(rv)
+	rRoutes := rv.FieldByName("routeMap")
+
+	key := rRoutes.MapKeys()[0]
+	val := rRoutes.MapIndex(key)
+
+	v := reflect.NewAt(val.Type(), unsafe.Pointer(val.InterfaceData()[0]))
+	q := v.Elem().Interface()
+	fmt.Println(q)
+
+	// structPtr := reflect.NewAt(reflect.StructOf(
+	// 	[]reflect.StructField{
+	// 		reflect.StructField{
+	// 			Name:    "endpoint",
+	// 			Type:    reflect.TypeOf("string"),
+	// 		},
+	// 	},
+	// ),
+	// 	unsafe.Pointer(val.InterfaceData()[0]))
+	// fmt.Println(structPtr.String())
+	// structVal := reflect.Indirect(structPtr)
+	// fmt.Println(structVal.FieldByName("endpoint"))
+
+	// fmt.Println(val)
+	// ptr := unsafe.Pointer(val.InterfaceData()[0])
+	// fmt.Println(ptr)
+	// v := reflect.NewAt(/* type of struct??? */, unsafe.Pointer(val.InterfaceData()[0]))
+	// fmt.Println(reflect.Indirect(v).FieldByName("endpoint"))
+
+	// iter := rRoutes.MapRange()
+	// for iter.Next() {
+	// 	fmt.Println(iter.Key())
+	// 	// rType := iter.Value().Interface()
+	// 	rType := iter.Value()
+	// 	rValue := reflect.ValueOf(rType)
+	// 	rValue = reflect.Indirect(rValue)
+	// 	fmt.Println(rValue.FieldByName("endpoint"))
+	// 	fmt.Println(reflect.ValueOf(iter.Value()).FieldByName("endpoint"))
+	// 	fmt.Println(rType)
+
+	// 	// fmt.Println(rType.Interface())
+
+	// 	// rValue := reflect.ValueOf(rType)
+
+	// 	fmt.Println(reflect.Indirect(rValue))
+
+	// 	r := reflect.Indirect(iter.Value())
+
+	// 	fmt.Println(r.FieldByName("handler"))
+
+	// 	// route := iter.Value()       // datarouter.Route
+	// 	// r := reflect.ValueOf(route) // Route -> *datarouter.routeImpl
+	// 	// r = reflect.Indirect(r)     // *datarouter.routeImpl -> routeImpl
+	// 	// routes = append(routes, collectRouteDatarouter(r))
+	// }
+	return routes
+}
+
+func collectRouteDatarouter(rv reflect.Value) RouteDefinition {
+	// fv := reflect.ValueOf(rv).FieldByName("endpoint")
+	fv := reflect.ValueOf(rv).FieldByName("handler")
+	fmt.Println(fv)
+	// for i := 0; i < rv.NumField(); i++ {
+	// 	f := rv.Field(i)
+	// 	// field := reflect.Indirect(reflect.ValueOf(f))
+	// 	// fmt.Println(f.Type().Field(0).Name)
+	// 	fmt.Println(reflect.TypeOf(f))
+	// }
+
+	rEndpoint := rv.FieldByName("endpoint")
+	endpoint := reflect.NewAt(rEndpoint.Type(), unsafe.Pointer(rEndpoint.UnsafeAddr())).Elem().Interface().(string)
+	rMethod := rv.FieldByName("method")
+	method := reflect.NewAt(rMethod.Type(), unsafe.Pointer(rMethod.UnsafeAddr())).Elem().Interface().(string)
+	routeDef := RouteDefinition{
+		Method: method,
+		Route:  endpoint,
+	}
+
+	rHandler := rv.FieldByName("handler")
+	file, line, name := getHandlerFuncName(rHandler)
+	routeDef.Handlers = append(routeDef.Handlers, routeHandler{
+		Path:     file,
+		LineNo:   line,
+		FuncName: name,
+	})
+
+	return routeDef
 }
 
 func GetFunctionName(i interface{}) string {
