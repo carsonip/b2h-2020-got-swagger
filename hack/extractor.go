@@ -1,7 +1,10 @@
 package hack
 
 import (
+	"fmt"
 	"github.com/go-martini/martini"
+	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"unsafe"
@@ -19,7 +22,25 @@ type RouteDefinition struct {
 	Handlers []routeHandler
 }
 
-func ExtractRoutes(r martini.Router) []RouteDefinition {
+type RouteDefinitions []RouteDefinition
+
+func (routes RouteDefinitions) Print() {
+	pwd, _ := os.Getwd()
+	for _, r := range routes {
+		fmt.Println(r.Method, r.Route)
+		for _, h := range r.Handlers {
+			relPath, _ := filepath.Rel(pwd, h.Path)
+			relFuncName, _ := filepath.Rel(pwd, h.FuncName)
+			fmt.Printf("    %v:%v %v %v\n", relPath, h.LineNo, h.FuncName, relFuncName)
+		}
+	}
+}
+
+func (routes RouteDefinitions) Export() {
+	// stub
+}
+
+func ExtractRoutes(r martini.Router) RouteDefinitions {
 	var routes []RouteDefinition
 
 	rv := reflect.ValueOf(r)  // Router interface to *router
