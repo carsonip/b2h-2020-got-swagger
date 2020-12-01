@@ -165,6 +165,7 @@ func TestJsonRawMessage(t *testing.T) {
 func TestArray(t *testing.T) {
 	type St struct{
 		ManyStrings []string
+		ManyInts []int
 	}
 	st := St{}
 	schema := StructToSchema(st)
@@ -175,6 +176,16 @@ func TestArray(t *testing.T) {
 			{
 				Name: "ManyStrings",
 				Type: FieldArray,
+				ArrayType: &Schema{
+					Type: FieldString,
+				},
+			},
+			{
+				Name: "ManyInts",
+				Type: FieldArray,
+				ArrayType: &Schema{
+					Type: FieldInteger,
+				},
 			},
 		},
 	}, schema)
@@ -227,23 +238,17 @@ func TestNestedStruct(t *testing.T) {
 }
 
 func TestArrayJsonBody(t *testing.T) {
-	// TODO: Fix array
 	var st []string
 	schema := StructToSchema(st)
 	assert.Equal(t, Schema{
 		Name: "",
 		Type: FieldArray,
-		Children: []Schema{
-			{
-				Name: "Foo",
-				Type: FieldObject,
-				Children: []Schema{
-					{
-						Name: "Bar",
-						Type: FieldString,
-					},
-				},
-			},
+		ArrayType: &Schema{
+			Type: FieldString,
 		},
 	}, schema)
+}
+
+func TestRecursiveStruct(t *testing.T) {
+	assert.Fail(t, "stub")
 }

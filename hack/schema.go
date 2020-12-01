@@ -19,6 +19,7 @@ const (
 type Schema struct {
 	Name string
 	Type FieldType
+	ArrayType *Schema
 	OmitEmpty bool
 	Required bool
 
@@ -38,15 +39,30 @@ func StructToSchema(obj interface{}) Schema {
 
 	if k == reflect.Slice || k == reflect.Array {
 		s.Type = FieldArray
-		for i := 0; i < v.Len(); i++ {
-			e := v.Index(i).Interface()
-			validateStruct(e)  // TODO: Fix array
-		}
+		s.ArrayType = getArrayType(v.Type().Elem())
 	} else {
 		s.Type = FieldObject
 		s.Children = validateStruct(obj)
 	}
 	return s
+}
+
+func getArrayType(elem reflect.Type) *Schema {
+	var t *Schema
+	switch elem.Kind(){
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
+		reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		t = &Schema{Type: FieldInteger}
+	case reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
+		t = &Schema{Type: FieldNumber}
+	case reflect.String:
+		t = &Schema{Type: FieldString}
+	case reflect.Bool:
+		t = &Schema{Type: FieldBoolean}
+	case reflect.Slice, reflect.Array:
+		t = &Schema{Type: FieldArray}  // TODO: recursive array definition
+	}
+	return t
 }
 
 func validateStruct(obj interface{}) []Schema {
@@ -89,8 +105,10 @@ func validateStruct(obj interface{}) []Schema {
 				f.Type = FieldString
 			case reflect.Bool:
 				f.Type = FieldBoolean
+			case reflect.Slice, reflect.Array:
+				f.Type = FieldArray
+				f.ArrayType = getArrayType(field.Type.Elem())
 			}
-			// TODO: Fix array
 		}
 
 		name := field.Name
