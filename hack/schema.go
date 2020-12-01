@@ -106,8 +106,13 @@ func validateStruct(obj interface{}) []Schema {
 			case reflect.Bool:
 				f.Type = FieldBoolean
 			case reflect.Slice, reflect.Array:
-				f.Type = FieldArray
-				f.ArrayType = getArrayType(field.Type.Elem())
+				if field.Type.Elem().Kind() == reflect.Uint8 {
+					// []byte should be a string
+					f.Type = FieldString
+				} else {
+					f.Type = FieldArray
+					f.ArrayType = getArrayType(field.Type.Elem())
+				}
 			}
 		}
 
