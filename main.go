@@ -4,23 +4,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"martiniExample/hack"
 )
 
 func main() {
-	//printRoutes()
+	printRoutes()
 	//exportRoutes()
 
-	matchRoute("./routes.json", "/users/123")
+	//matchRoute("./routes.json", "get", "/api/s/5668600916475904/subscription/setting/featureFlags")
 }
 
-func matchRoute(path string, match string) {
+func matchRoute(path string, method string, match string) {
 	if dat, err := ioutil.ReadFile(path); err != nil {
 		fmt.Println("*** Failed to read routes json, maybe you need to generate it first! ***")
 	} else {
 		routeDefs := hack.RouteDefinitions{}
 		json.Unmarshal([]byte(dat), &routeDefs)
-		fmt.Println(routeDefs.MatchPath(match))
+		rMatch := routeDefs.MatchPath(method, match)
+		rJSON, err := json.Marshal(rMatch)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+		fmt.Printf("%s\n", string(rJSON))
 	}
 }
 

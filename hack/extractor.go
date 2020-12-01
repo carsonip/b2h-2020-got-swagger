@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"unsafe"
 	"encoding/json"
@@ -32,7 +33,7 @@ func (routes RouteDefinitions) Print() {
 		fmt.Println(r.Method, r.Route)
 		for _, h := range r.Handlers {
 			relPath, _ := filepath.Rel(pwd, h.Path)
-			fmt.Printf("    %v:%v %v %v\n", relPath, h.LineNo, h.FuncName)
+			fmt.Printf("    %v:%v %v\n", relPath, h.LineNo, h.FuncName)
 		}
 	}
 }
@@ -66,6 +67,14 @@ func collectRoute(rv reflect.Value) RouteDefinition {
 	method := reflect.NewAt(rMethod.Type(), unsafe.Pointer(rMethod.UnsafeAddr())).Elem().Interface().(string)
 	rHandlers := rRoute.FieldByName("handlers")
 
+
+	return newRoute(method, pattern, rHandlers)
+}
+
+var routeReg1 = regexp.MustCompile(`:[^/#?()\.\\]+`)
+var routeReg2 = regexp.MustCompile(`\*\*`)
+
+func newRoute(method string, pattern string, rHandlers reflect.Value) RouteDefinition {
 	routeDef := RouteDefinition{
 		Method: method,
 		Route:  pattern,
@@ -79,6 +88,16 @@ func collectRoute(rv reflect.Value) RouteDefinition {
 			FuncName: name,
 		})
 	}
+
+	pattern = routeReg1.ReplaceAllStringFunc(pattern, func(m string) string {
+		return fmt.Sprintf(`(?P<%s>[^/#?]+)`, m[1:])
+	})
+	var index int
+	pattern = routeReg2.ReplaceAllStringFunc(pattern, func(m string) string {
+		index++
+		return fmt.Sprintf(`(?P<_%d>[^#?]*)`, index)
+	})
+	pattern += `\/?`
 	return routeDef
 }
 
