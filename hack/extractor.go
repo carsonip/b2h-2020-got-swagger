@@ -3,23 +3,25 @@ package hack
 import (
 	"fmt"
 	"github.com/go-martini/martini"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"unsafe"
+	"encoding/json"
 )
 
 type routeHandler struct {
-	Path     string
-	LineNo   int
-	FuncName string
+	Path     string `json:"path"`
+	LineNo   int `json:"lineNo"`
+	FuncName string `json:"funcName"`
 }
 
 type RouteDefinition struct {
-	Method   string
-	Route    string
-	Handlers []routeHandler
+	Method string `json:"method"`
+	Route string `json:"route"`
+	Handlers []routeHandler `json:"handlers"`
 }
 
 type RouteDefinitions []RouteDefinition
@@ -30,14 +32,17 @@ func (routes RouteDefinitions) Print() {
 		fmt.Println(r.Method, r.Route)
 		for _, h := range r.Handlers {
 			relPath, _ := filepath.Rel(pwd, h.Path)
-			relFuncName, _ := filepath.Rel(pwd, h.FuncName)
-			fmt.Printf("    %v:%v %v %v\n", relPath, h.LineNo, h.FuncName, relFuncName)
+			fmt.Printf("    %v:%v %v %v\n", relPath, h.LineNo, h.FuncName)
 		}
 	}
 }
 
 func (routes RouteDefinitions) Export() {
-	// stub
+	jsonRoutes, _ := json.Marshal(routes)
+	if err := ioutil.WriteFile("./routes.json", jsonRoutes, 0644); err != nil {
+		fmt.Println("*** Failed to write file ***")
+	}
+	//fmt.Println(string(jsonRoutes))
 }
 
 func ExtractRoutes(r martini.Router) RouteDefinitions {

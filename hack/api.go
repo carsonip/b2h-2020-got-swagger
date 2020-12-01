@@ -8,9 +8,18 @@ func GetMartini() *martini.ClassicMartini {
 		return "Hello world!"
 	})
 	m.Get("/foo", foo)
+	m.Get("/users/:id", foo)
+
+	m.Group("/api", func(publicApiRouter martini.Router) {
+		publicApiRouter.Get("/get", func() string {
+			return "hello world"
+		})
+	})
 	return m
 }
 
 func foo() string {
 	return "foo"
 }
+
+
