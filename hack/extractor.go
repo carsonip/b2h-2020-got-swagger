@@ -102,10 +102,11 @@ func newRoute(method string, pattern string, rHandlers reflect.Value) RouteDefin
 }
 
 func getHandlerFuncName(rHandler reflect.Value) (string, int, string) {
-	rHandler = reflect.NewAt(rHandler.Type(), unsafe.Pointer(rHandler.UnsafeAddr()))
-	q := rHandler.Elem()
-
-	return GetFileLineName(q.Interface())
+	rHandlerPtr := reflect.NewAt(rHandler.Type(), unsafe.Pointer(rHandler.UnsafeAddr()))
+	rHandlerInt := rHandlerPtr.Elem()
+	file, line, funcName := GetFileLineName(rHandlerInt.Interface())
+	getBindStructIfExist(rHandlerInt)
+	return file, line, funcName
 }
 
 func GetFunctionName(i interface{}) string {
