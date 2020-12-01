@@ -249,6 +249,63 @@ func TestArrayJsonBody(t *testing.T) {
 	}, schema)
 }
 
+func TestPointer(t *testing.T) {
+	type St struct{
+		Str *string
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name: "Str",
+				Type: FieldString,
+			},
+		},
+	}, schema)
+}
+
+func TestRecursiveEmptyStruct(t *testing.T) {
+	type St struct {
+		Recursive *St
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name: "Recursive",
+				Type: FieldObject,
+				Recursive: true,
+			},
+		},
+	}, schema)
+}
+
 func TestRecursiveStruct(t *testing.T) {
-	assert.Fail(t, "stub")
+	type St struct {
+		Recursive *St
+		Str string
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name: "Recursive",
+				Type: FieldObject,
+				Recursive: true,
+			},
+			{
+				Name: "Str",
+				Type: FieldString,
+			},
+		},
+	}, schema)
 }

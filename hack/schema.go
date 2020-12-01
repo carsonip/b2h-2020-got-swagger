@@ -22,6 +22,7 @@ type Schema struct {
 	ArrayType *Schema
 	OmitEmpty bool
 	Required bool
+	Recursive bool
 
 	Children []Schema
 }
@@ -88,14 +89,21 @@ func validateStruct(obj interface{}) []Schema {
 		fieldValue := val.Field(i).Interface()
 		zero := reflect.Zero(field.Type).Interface()
 
+		kind := field.Type.Kind()
 		// Validate nested and embedded structs (if pointer, only do so if not nil)
-		if field.Type.Kind() == reflect.Struct ||
-			(field.Type.Kind() == reflect.Ptr && !reflect.DeepEqual(zero, fieldValue) &&
+		if kind == reflect.Struct ||
+			(kind == reflect.Ptr && !reflect.DeepEqual(zero, fieldValue) &&
 				field.Type.Elem().Kind() == reflect.Struct) {
 			f.Type = FieldObject
 			f.Children = validateStruct(fieldValue)
+		} else if kind == reflect.Ptr && field.Type.Elem() == val.Type() {
+			f.Type = FieldObject
+			f.Recursive = true
 		} else {
-			switch field.Type.Kind() {
+			if kind == reflect.Ptr {
+				kind = field.Type.Elem().Kind()
+			}
+			switch kind {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
 				reflect.Uint16, reflect.Uint32, reflect.Uint64:
 					f.Type = FieldInteger
