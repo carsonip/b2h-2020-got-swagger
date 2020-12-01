@@ -6,6 +6,7 @@ import (
 )
 
 type FieldType int
+
 const (
 	FieldInvalid = iota
 	FieldString
@@ -17,11 +18,11 @@ const (
 )
 
 type Schema struct {
-	Name string
-	Type FieldType
+	Name      string
+	Type      FieldType
 	ArrayType *Schema
 	OmitEmpty bool
-	Required bool
+	Required  bool
 	Recursive bool
 
 	Children []Schema
@@ -43,14 +44,14 @@ func StructToSchema(obj interface{}) Schema {
 		s.ArrayType = getArrayType(v.Type().Elem())
 	} else {
 		s.Type = FieldObject
-		s.Children = validateStruct(obj)
+		s.Children = traverseStruct(obj)
 	}
 	return s
 }
 
 func getArrayType(elem reflect.Type) *Schema {
 	var t *Schema
-	switch elem.Kind(){
+	switch elem.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
 		reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		t = &Schema{Type: FieldInteger}
@@ -61,12 +62,12 @@ func getArrayType(elem reflect.Type) *Schema {
 	case reflect.Bool:
 		t = &Schema{Type: FieldBoolean}
 	case reflect.Slice, reflect.Array:
-		t = &Schema{Type: FieldArray}  // TODO: recursive array definition
+		t = &Schema{Type: FieldArray} // TODO: recursive array definition
 	}
 	return t
 }
 
-func validateStruct(obj interface{}) []Schema {
+func traverseStruct(obj interface{}) []Schema {
 	var s []Schema
 
 	typ := reflect.TypeOf(obj)
@@ -95,7 +96,7 @@ func validateStruct(obj interface{}) []Schema {
 			(kind == reflect.Ptr && !reflect.DeepEqual(zero, fieldValue) &&
 				field.Type.Elem().Kind() == reflect.Struct) {
 			f.Type = FieldObject
-			f.Children = validateStruct(fieldValue)
+			f.Children = traverseStruct(fieldValue)
 		} else if kind == reflect.Ptr && field.Type.Elem() == val.Type() {
 			f.Type = FieldObject
 			f.Recursive = true
@@ -106,7 +107,7 @@ func validateStruct(obj interface{}) []Schema {
 			switch kind {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
 				reflect.Uint16, reflect.Uint32, reflect.Uint64:
-					f.Type = FieldInteger
+				f.Type = FieldInteger
 			case reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
 				f.Type = FieldNumber
 			case reflect.String:
@@ -127,7 +128,7 @@ func validateStruct(obj interface{}) []Schema {
 		name := field.Name
 		if j := field.Tag.Get("json"); j != "" {
 			if strings.HasSuffix(j, ",omitempty") {
-				j = j[:len(j) - len(",omitempty")]
+				j = j[:len(j)-len(",omitempty")]
 				f.OmitEmpty = true
 			}
 			name = j

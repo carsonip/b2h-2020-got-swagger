@@ -7,12 +7,12 @@ import (
 )
 
 func TestFields(t *testing.T) {
-	type St struct{
-		Str string
-		Num int
+	type St struct {
+		Str      string
+		Num      int
 		LargeNum int64
-		Float float64
-		Bool bool
+		Float    float64
+		Bool     bool
 	}
 	st := St{}
 	schema := StructToSchema(st)
@@ -45,7 +45,7 @@ func TestFields(t *testing.T) {
 }
 
 func TestRequiredField(t *testing.T) {
-	type St struct{
+	type St struct {
 		Str string `binding:"required"`
 	}
 	st := St{}
@@ -55,8 +55,8 @@ func TestRequiredField(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name: "Str",
-				Type: FieldString,
+				Name:     "Str",
+				Type:     FieldString,
 				Required: true,
 			},
 		},
@@ -64,7 +64,7 @@ func TestRequiredField(t *testing.T) {
 }
 
 func TestJsonField(t *testing.T) {
-	type St struct{
+	type St struct {
 		Str string `json:"my_str"`
 	}
 	st := St{}
@@ -82,7 +82,7 @@ func TestJsonField(t *testing.T) {
 }
 
 func TestJsonFieldOmitEmpty(t *testing.T) {
-	type St struct{
+	type St struct {
 		Str string `json:"my_str,omitempty"`
 	}
 	st := St{}
@@ -92,8 +92,8 @@ func TestJsonFieldOmitEmpty(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name: "my_str",
-				Type: FieldString,
+				Name:      "my_str",
+				Type:      FieldString,
 				OmitEmpty: true,
 			},
 		},
@@ -101,20 +101,20 @@ func TestJsonFieldOmitEmpty(t *testing.T) {
 }
 
 func TestJsonFieldIgnore(t *testing.T) {
-	type St struct{
+	type St struct {
 		Str string `json:"-"`
 	}
 	st := St{}
 	schema := StructToSchema(st)
 	assert.Equal(t, Schema{
-		Name: "",
-		Type: FieldObject,
+		Name:     "",
+		Type:     FieldObject,
 		Children: nil,
 	}, schema)
 }
 
 func TestFormField(t *testing.T) {
-	type St struct{
+	type St struct {
 		Str string `form:"my_str"`
 	}
 	st := St{}
@@ -132,20 +132,20 @@ func TestFormField(t *testing.T) {
 }
 
 func TestFormFieldIgnore(t *testing.T) {
-	type St struct{
+	type St struct {
 		Str string `form:"-"`
 	}
 	st := St{}
 	schema := StructToSchema(st)
 	assert.Equal(t, Schema{
-		Name: "",
-		Type: FieldObject,
+		Name:     "",
+		Type:     FieldObject,
 		Children: nil,
 	}, schema)
 }
 
 func TestJsonRawMessage(t *testing.T) {
-	type St struct{
+	type St struct {
 		RawJson json.RawMessage
 	}
 	st := St{}
@@ -163,9 +163,9 @@ func TestJsonRawMessage(t *testing.T) {
 }
 
 func TestArray(t *testing.T) {
-	type St struct{
+	type St struct {
 		ManyStrings []string
-		ManyInts []int
+		ManyInts    []int
 	}
 	st := St{}
 	schema := StructToSchema(st)
@@ -192,7 +192,7 @@ func TestArray(t *testing.T) {
 }
 
 func TestAnonStruct(t *testing.T) {
-	st := struct{
+	st := struct {
 		Foo string
 	}{
 		"",
@@ -211,7 +211,7 @@ func TestAnonStruct(t *testing.T) {
 }
 
 func TestNestedStruct(t *testing.T) {
-	type Inner struct{
+	type Inner struct {
 		Bar string
 	}
 	type Outer struct {
@@ -250,7 +250,7 @@ func TestArrayJsonBody(t *testing.T) {
 }
 
 func TestPointer(t *testing.T) {
-	type St struct{
+	type St struct {
 		Str *string
 	}
 	st := St{}
@@ -278,8 +278,8 @@ func TestRecursiveEmptyStruct(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name: "Recursive",
-				Type: FieldObject,
+				Name:      "Recursive",
+				Type:      FieldObject,
 				Recursive: true,
 			},
 		},
@@ -289,7 +289,7 @@ func TestRecursiveEmptyStruct(t *testing.T) {
 func TestRecursiveStruct(t *testing.T) {
 	type St struct {
 		Recursive *St
-		Str string
+		Str       string
 	}
 	st := St{}
 	schema := StructToSchema(st)
@@ -298,8 +298,8 @@ func TestRecursiveStruct(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name: "Recursive",
-				Type: FieldObject,
+				Name:      "Recursive",
+				Type:      FieldObject,
 				Recursive: true,
 			},
 			{
