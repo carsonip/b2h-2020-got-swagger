@@ -17,6 +17,7 @@ func NewSwaggerExporter(routeDefs RouteDefinitions) SwaggerExporter {
 }
 
 func formatRoute(route string) string {
+	route = strings.ReplaceAll(route, "?", "")
 	return route
 }
 
