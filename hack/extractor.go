@@ -23,6 +23,7 @@ type RouteDefinition struct {
 	Method string `json:"method"`
 	Route string `json:"route"`
 	Handlers []routeHandler `json:"handlers"`
+	Schema Schema `json:"-"`
 }
 
 type RouteDefinitions []RouteDefinition
@@ -49,23 +50,26 @@ func (routes RouteDefinitions) Export() {
 func ExtractRoutes(r martini.Router) RouteDefinitions {
 	var routes []RouteDefinition
 
-	rv := reflect.ValueOf(r)  // Router interface to *router
-	rv = reflect.Indirect(rv) // *router to router
-	rRoutes := rv.FieldByName("routes")
+	rRoutes := getRoutesRv(r)
 	for i := 0; i < rRoutes.Len(); i++ {
 		routes = append(routes, collectRoute(rRoutes.Index(i)))
 	}
 	return routes
 }
 
-func collectRoute(rv reflect.Value) RouteDefinition {
-	rRoute := reflect.Indirect(rv) // *route to route
+func getRoutesRv(r martini.Router) reflect.Value {
+	rv := reflect.ValueOf(r)  // Router interface to *router
+	rv = reflect.Indirect(rv) // *router to router
+	return rv.FieldByName("routes")
+}
 
-	rPattern := rRoute.FieldByName("pattern")
-	pattern := reflect.NewAt(rPattern.Type(), unsafe.Pointer(rPattern.UnsafeAddr())).Elem().Interface().(string)
-	rMethod := rRoute.FieldByName("method")
-	method := reflect.NewAt(rMethod.Type(), unsafe.Pointer(rMethod.UnsafeAddr())).Elem().Interface().(string)
-	rHandlers := rRoute.FieldByName("handlers")
+func collectRoute(rRoutePtr reflect.Value) RouteDefinition {
+	rRoute := reflect.Indirect(rRoutePtr) // *route to route
+
+	pattern := getPatternFromRRoute(rRoute)
+	method := getMethodFromRRoute(rRoute)
+
+	rHandlers := getRHandlersFromRRoute(rRoute)
 
 
 	return newRoute(method, pattern, rHandlers)
@@ -80,13 +84,20 @@ func newRoute(method string, pattern string, rHandlers reflect.Value) RouteDefin
 		Route:  pattern,
 	}
 
+	var bindStruct interface{}
 	for i := 0; i < rHandlers.Len(); i++ {
-		file, line, name := getHandlerFuncName(rHandlers.Index(i))
+		file, line, name, handlerBindStruct := getHandlerMetadata(rHandlers.Index(i))
+		if bindStruct == nil && handlerBindStruct != nil {
+			bindStruct = handlerBindStruct
+		}
 		routeDef.Handlers = append(routeDef.Handlers, routeHandler{
 			Path:     file,
 			LineNo:   line,
 			FuncName: name,
 		})
+	}
+	if bindStruct != nil {
+		routeDef.Schema = StructToSchema(bindStruct)
 	}
 
 	pattern = routeReg1.ReplaceAllStringFunc(pattern, func(m string) string {
@@ -101,11 +112,30 @@ func newRoute(method string, pattern string, rHandlers reflect.Value) RouteDefin
 	return routeDef
 }
 
-func getHandlerFuncName(rHandler reflect.Value) (string, int, string) {
-	rHandler = reflect.NewAt(rHandler.Type(), unsafe.Pointer(rHandler.UnsafeAddr()))
-	q := rHandler.Elem()
+func getPatternFromRRoute(rRoute reflect.Value) string {
+	rPattern := rRoute.FieldByName("pattern")
+	return reflect.NewAt(rPattern.Type(), unsafe.Pointer(rPattern.UnsafeAddr())).Elem().Interface().(string)
+}
 
-	return GetFileLineName(q.Interface())
+func getMethodFromRRoute(rRoute reflect.Value) string {
+	rMethod := rRoute.FieldByName("method")
+	return reflect.NewAt(rMethod.Type(), unsafe.Pointer(rMethod.UnsafeAddr())).Elem().Interface().(string)
+}
+
+func getRHandlersFromRRoute(rRoute reflect.Value) reflect.Value {
+	return rRoute.FieldByName("handlers")
+}
+
+func getHandlerMetadata(rHandler reflect.Value) (string, int, string, interface{}) {
+	rHandlerInt := getRHandlerIntFromRHandler(rHandler)
+	file, line, funcName := GetFileLineName(rHandlerInt.Interface())
+	bindStruct := getBindStructIfExist(rHandlerInt)
+	return file, line, funcName, bindStruct
+}
+
+func getRHandlerIntFromRHandler(rHandler reflect.Value) reflect.Value {
+	rHandlerPtr := reflect.NewAt(rHandler.Type(), unsafe.Pointer(rHandler.UnsafeAddr()))
+	return rHandlerPtr.Elem()
 }
 
 func GetFunctionName(i interface{}) string {
