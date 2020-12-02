@@ -45,7 +45,7 @@ func (s SwaggerExporter) ExportToYaml(w io.Writer) {
 	for _, r := range s.routeDefs {
 		fmt.Fprintf(w, "%s%s:\n", strings.Repeat(" ", 2), formatRoute(r.Route))
 		fmt.Fprintf(w, "%s%s:\n", strings.Repeat(" ", 4), strings.ToLower(r.Method))
-		if r.Schema.Name != "" {
+		if r.Schema.Type != FieldInvalid {
 			fmt.Fprintf(w, "%srequestBody:\n", strings.Repeat(" ", 6))
 			fmt.Fprintf(w, "%scontent:\n", strings.Repeat(" ", 8))
 			fmt.Fprintf(w, "%sapplication/json:\n", strings.Repeat(" ", 10))

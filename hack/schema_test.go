@@ -267,6 +267,33 @@ func TestPointer(t *testing.T) {
 	}, schema)
 }
 
+func TestPtrStruct(t *testing.T) {
+	type Inner struct {
+		Str string
+	}
+	type St struct {
+		Inner *Inner
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name: "Inner",
+				Type: FieldObject,
+				Children: []Schema{
+					{
+						Name: "Str",
+						Type: FieldString,
+					},
+				},
+			},
+		},
+	}, schema)
+}
+
 func TestRecursiveEmptyStruct(t *testing.T) {
 	type St struct {
 		Recursive *St
@@ -396,3 +423,47 @@ func TestArrayOfPtrs(t *testing.T) {
 		},
 	}, schema)
 }
+
+func TestMap(t *testing.T) {
+	type St struct {
+		StrMap map[string]string
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name:      "StrMap",
+				Type:      FieldObject,
+			},
+
+		},
+	}, schema)
+}
+
+func TestArrayOfRecursiveStruct(t *testing.T) {
+	type St struct {
+		Ptrs []*St
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name:      "Ptrs",
+				Type:      FieldArray,
+				ArrayType: &Schema{
+					Name:      "",
+					Type:      FieldObject,
+					Recursive: true,
+				},
+			},
+
+		},
+	}, schema)
+}
+

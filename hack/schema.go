@@ -70,11 +70,11 @@ func StructToSchema(obj interface{}) Schema {
 		k = v.Kind()
 	}
 
-	s := Schema{Name: "#ROOT#"}
+	s := Schema{}
 
 	if k == reflect.Slice || k == reflect.Array {
 		s.Type = FieldArray
-		s.ArrayType = getArrayType(v.Type().Elem())
+		s.ArrayType = getArrayType(v.Type().Elem(), nil)
 	} else {
 		s.Type = FieldObject
 		s.Children = traverseStruct(obj)
@@ -82,7 +82,7 @@ func StructToSchema(obj interface{}) Schema {
 	return s
 }
 
-func getArrayType(elem reflect.Type) *Schema {
+func getArrayType(elem reflect.Type, parentType reflect.Type) *Schema {
 	var t *Schema
 	kind := elem.Kind()
 	if kind == reflect.Ptr {
@@ -103,7 +103,13 @@ func getArrayType(elem reflect.Type) *Schema {
 	case reflect.Slice, reflect.Array:
 		t = &Schema{Type: FieldArray} // TODO: recursive array definition
 	case reflect.Struct:
-		t = &Schema{Type: FieldObject, Children: traverseStruct(zero)}
+		if elem == parentType {
+			t = &Schema{Type: FieldObject, Recursive: true}
+		} else {
+			t = &Schema{Type: FieldObject, Children: traverseStruct(zero)}
+		}
+	case reflect.Map:
+		t = &Schema{Type: FieldObject}
 	}
 	return t
 }
@@ -129,18 +135,17 @@ func traverseStruct(obj interface{}) []Schema {
 		}
 
 		fieldValue := val.Field(i).Interface()
-		zero := reflect.Zero(field.Type).Interface()
 
 		kind := field.Type.Kind()
-		// Validate nested and embedded structs (if pointer, only do so if not nil)
-		if kind == reflect.Struct ||
-			(kind == reflect.Ptr && !reflect.DeepEqual(zero, fieldValue) &&
-				field.Type.Elem().Kind() == reflect.Struct) {
+		if kind == reflect.Struct {
 			f.Type = FieldObject
 			f.Children = traverseStruct(fieldValue)
 		} else if kind == reflect.Ptr && field.Type.Elem() == val.Type() {
 			f.Type = FieldObject
 			f.Recursive = true
+		} else if kind == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
+			f.Type = FieldObject
+			f.Children = traverseStruct(reflect.Zero(field.Type.Elem()).Interface())
 		} else {
 			if kind == reflect.Ptr {
 				kind = field.Type.Elem().Kind()
@@ -161,8 +166,10 @@ func traverseStruct(obj interface{}) []Schema {
 					f.Type = FieldString
 				} else {
 					f.Type = FieldArray
-					f.ArrayType = getArrayType(field.Type.Elem())
+					f.ArrayType = getArrayType(field.Type.Elem(), typ)
 				}
+			case reflect.Map:
+				f.Type = FieldObject
 			}
 		}
 
