@@ -51,7 +51,13 @@ func StructToSchema(obj interface{}) Schema {
 
 func getArrayType(elem reflect.Type) *Schema {
 	var t *Schema
-	switch elem.Kind() {
+	kind := elem.Kind()
+	if kind == reflect.Ptr {
+		elem = elem.Elem()
+		kind = elem.Kind()
+	}
+	zero := reflect.Zero(elem).Interface()
+	switch kind {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
 		reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		t = &Schema{Type: FieldInteger}
@@ -63,6 +69,8 @@ func getArrayType(elem reflect.Type) *Schema {
 		t = &Schema{Type: FieldBoolean}
 	case reflect.Slice, reflect.Array:
 		t = &Schema{Type: FieldArray} // TODO: recursive array definition
+	case reflect.Struct:
+		t = &Schema{Type: FieldObject, Children: traverseStruct(zero)}
 	}
 	return t
 }

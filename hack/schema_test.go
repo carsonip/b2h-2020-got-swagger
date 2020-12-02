@@ -309,3 +309,90 @@ func TestRecursiveStruct(t *testing.T) {
 		},
 	}, schema)
 }
+
+func TestArrayOfStructs(t *testing.T) {
+	type Inner struct {
+		Str string
+	}
+	type St struct {
+		Inners []Inner
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name:      "Inners",
+				Type:      FieldArray,
+				ArrayType: &Schema{
+					Name: "",
+					Type: FieldObject,
+					Children: []Schema{
+						{
+							Name: "Str",
+							Type: FieldString,
+						},
+					},
+				},
+			},
+
+		},
+	}, schema)
+}
+
+func TestArrayOfPtrStructs(t *testing.T) {
+	type Inner struct {
+		Str string
+	}
+	type St struct {
+		Inners []*Inner
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name:      "Inners",
+				Type:      FieldArray,
+				ArrayType: &Schema{
+					Name: "",
+					Type: FieldObject,
+					Children: []Schema{
+						{
+							Name: "Str",
+							Type: FieldString,
+						},
+					},
+				},
+			},
+
+		},
+	}, schema)
+}
+
+func TestArrayOfPtrs(t *testing.T) {
+	type St struct {
+		StrPtrs []*string
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name:      "StrPtrs",
+				Type:      FieldArray,
+				ArrayType: &Schema{
+					Name:      "",
+					Type:      FieldString,
+				},
+			},
+
+		},
+	}, schema)
+}
