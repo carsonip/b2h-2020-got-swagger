@@ -21,7 +21,7 @@ var paramRegex = regexp.MustCompile(":([^/]*)")
 
 func formatRoute(route string) string {
 	route = strings.ReplaceAll(route, "?", "")
-	route = paramRegex.ReplaceAllString(route, "{$1}")
+	// route = paramRegex.ReplaceAllString(route, "{$1}")
 	return route
 }
 
@@ -31,6 +31,16 @@ func formatMethod(method string) string {
 	}
 	method = strings.ToLower(method)
 	return method
+}
+
+var tagRegex = regexp.MustCompile("/api/ss?/:subscription(Name|Id)/(\\w*)/.*")
+
+func getTags(route string) []string {
+	// TODO how generalized can this be made
+	if matches := tagRegex.FindStringSubmatch(route); len(matches) > 0 {
+		return []string{matches[2]}
+	}
+	return []string{}
 }
 
 func (s SwaggerExporter) PrintYaml() {
@@ -107,6 +117,14 @@ func (s SwaggerExporter) exportPaths(w io.Writer) {
 				writeRequestBody(w, r.Schema, 6)
 			default:
 				writeParams(w, r.Schema, 6)
+			}
+		}
+
+		tags := getTags(r.Route)
+		if len(tags) > 0 {
+			fmt.Fprintf(w, "%stags:\n", strings.Repeat(" ", 6))
+			for _, tag := range tags {
+				fmt.Fprintf(w, "%s- \"%s\"\n", strings.Repeat(" ", 6), tag)
 			}
 		}
 
