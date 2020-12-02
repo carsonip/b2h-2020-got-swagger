@@ -1,6 +1,7 @@
 package hack
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -17,6 +18,20 @@ const (
 	FieldObject
 )
 
+// https://swagger.io/docs/specification/data-models/data-types/
+func (ft FieldType) String() string {
+	ftToStrMap := map[FieldType]string {
+		FieldInvalid: "INVALID",
+		FieldString: "string",
+		FieldNumber: "number",
+		FieldInteger: "integer",
+		FieldBoolean: "boolean",
+		FieldArray: "array",
+		FieldObject: "object",
+	}
+	return ftToStrMap[ft]
+}
+
 type Schema struct {
 	Name      string
 	Type      FieldType
@@ -28,6 +43,24 @@ type Schema struct {
 	Children []Schema
 }
 
+func (s Schema) Print() {
+	s.printIndent(0)
+}
+
+func (s Schema) printIndent(indent int) {
+	indentStr := strings.Repeat(" ", indent)
+	fmt.Printf("%s%s %s\n", indentStr, s.Name, s.Type)
+	if s.ArrayType != nil {
+		fmt.Printf("%sArrayType:\n", indentStr)
+		s.ArrayType.printIndent(indent + 2)
+	} else if len(s.Children) > 0 {
+		fmt.Printf("%sChildren:\n", indentStr)
+		for _, c := range s.Children {
+			c.printIndent(indent + 2)
+		}
+	}
+}
+
 func StructToSchema(obj interface{}) Schema {
 	v := reflect.ValueOf(obj)
 	k := v.Kind()
@@ -37,7 +70,7 @@ func StructToSchema(obj interface{}) Schema {
 		k = v.Kind()
 	}
 
-	s := Schema{}
+	s := Schema{Name: "#ROOT#"}
 
 	if k == reflect.Slice || k == reflect.Array {
 		s.Type = FieldArray

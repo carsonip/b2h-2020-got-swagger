@@ -23,6 +23,7 @@ type RouteDefinition struct {
 	Method string `json:"method"`
 	Route string `json:"route"`
 	Handlers []routeHandler `json:"handlers"`
+	Schema Schema `json:"-"`
 }
 
 type RouteDefinitions []RouteDefinition
@@ -83,13 +84,20 @@ func newRoute(method string, pattern string, rHandlers reflect.Value) RouteDefin
 		Route:  pattern,
 	}
 
+	var bindStruct interface{}
 	for i := 0; i < rHandlers.Len(); i++ {
-		file, line, name := getHandlerMetadata(rHandlers.Index(i))
+		file, line, name, handlerBindStruct := getHandlerMetadata(rHandlers.Index(i))
+		if bindStruct == nil && handlerBindStruct != nil {
+			bindStruct = handlerBindStruct
+		}
 		routeDef.Handlers = append(routeDef.Handlers, routeHandler{
 			Path:     file,
 			LineNo:   line,
 			FuncName: name,
 		})
+	}
+	if bindStruct != nil {
+		routeDef.Schema = StructToSchema(bindStruct)
 	}
 
 	pattern = routeReg1.ReplaceAllStringFunc(pattern, func(m string) string {
@@ -118,11 +126,11 @@ func getRHandlersFromRRoute(rRoute reflect.Value) reflect.Value {
 	return rRoute.FieldByName("handlers")
 }
 
-func getHandlerMetadata(rHandler reflect.Value) (string, int, string) {
+func getHandlerMetadata(rHandler reflect.Value) (string, int, string, interface{}) {
 	rHandlerInt := getRHandlerIntFromRHandler(rHandler)
 	file, line, funcName := GetFileLineName(rHandlerInt.Interface())
-	getBindStructIfExist(rHandlerInt)
-	return file, line, funcName
+	bindStruct := getBindStructIfExist(rHandlerInt)
+	return file, line, funcName, bindStruct
 }
 
 func getRHandlerIntFromRHandler(rHandler reflect.Value) reflect.Value {
