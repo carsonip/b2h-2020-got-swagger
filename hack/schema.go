@@ -110,6 +110,8 @@ func getArrayType(elem reflect.Type, parentType reflect.Type) *Schema {
 		}
 	case reflect.Map:
 		t = &Schema{Type: FieldObject}
+	case reflect.Interface:
+		t = &Schema{Type: FieldString}
 	}
 	return t
 }
@@ -170,6 +172,8 @@ func traverseStruct(obj interface{}) []Schema {
 				}
 			case reflect.Map:
 				f.Type = FieldObject
+			case reflect.Interface:
+				f.Type = FieldString
 			}
 		}
 

@@ -492,3 +492,22 @@ func TestArrayOfArray(t *testing.T) {
 		},
 	}, schema)
 }
+
+func TestInterface(t *testing.T) {
+	type St struct {
+		Interface interface{}
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name:      "Interface",
+				Type:      FieldString,
+			},
+
+		},
+	}, schema)
+}
