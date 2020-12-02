@@ -110,76 +110,21 @@ func getHandlerFuncName(rHandler reflect.Value) (string, int, string) {
 
 func ExtractRoutesDatarouter(r interface{}) RouteDefinitions {
 	var routes []RouteDefinition
-	rv := reflect.ValueOf(r) // datarouter.Router (as interface{}) to *datarouter.routerImpl
+	rv := reflect.ValueOf(r)
 	rv = reflect.Indirect(rv)
 	rRoutes := rv.FieldByName("routeMap")
 
-	key := rRoutes.MapKeys()[0]
-	val := rRoutes.MapIndex(key)
+	iter := rRoutes.MapRange()
+	for iter.Next() {
+		routeVal := iter.Value().Elem()
+		routeVal = reflect.Indirect(routeVal)
+		routes = append(routes, collectRouteDatarouter(routeVal))
+	}
 
-	v := reflect.NewAt(val.Type(), unsafe.Pointer(val.InterfaceData()[0]))
-	q := v.Elem().Interface()
-	fmt.Println(q)
-
-	// structPtr := reflect.NewAt(reflect.StructOf(
-	// 	[]reflect.StructField{
-	// 		reflect.StructField{
-	// 			Name:    "endpoint",
-	// 			Type:    reflect.TypeOf("string"),
-	// 		},
-	// 	},
-	// ),
-	// 	unsafe.Pointer(val.InterfaceData()[0]))
-	// fmt.Println(structPtr.String())
-	// structVal := reflect.Indirect(structPtr)
-	// fmt.Println(structVal.FieldByName("endpoint"))
-
-	// fmt.Println(val)
-	// ptr := unsafe.Pointer(val.InterfaceData()[0])
-	// fmt.Println(ptr)
-	// v := reflect.NewAt(/* type of struct??? */, unsafe.Pointer(val.InterfaceData()[0]))
-	// fmt.Println(reflect.Indirect(v).FieldByName("endpoint"))
-
-	// iter := rRoutes.MapRange()
-	// for iter.Next() {
-	// 	fmt.Println(iter.Key())
-	// 	// rType := iter.Value().Interface()
-	// 	rType := iter.Value()
-	// 	rValue := reflect.ValueOf(rType)
-	// 	rValue = reflect.Indirect(rValue)
-	// 	fmt.Println(rValue.FieldByName("endpoint"))
-	// 	fmt.Println(reflect.ValueOf(iter.Value()).FieldByName("endpoint"))
-	// 	fmt.Println(rType)
-
-	// 	// fmt.Println(rType.Interface())
-
-	// 	// rValue := reflect.ValueOf(rType)
-
-	// 	fmt.Println(reflect.Indirect(rValue))
-
-	// 	r := reflect.Indirect(iter.Value())
-
-	// 	fmt.Println(r.FieldByName("handler"))
-
-	// 	// route := iter.Value()       // datarouter.Route
-	// 	// r := reflect.ValueOf(route) // Route -> *datarouter.routeImpl
-	// 	// r = reflect.Indirect(r)     // *datarouter.routeImpl -> routeImpl
-	// 	// routes = append(routes, collectRouteDatarouter(r))
-	// }
 	return routes
 }
 
 func collectRouteDatarouter(rv reflect.Value) RouteDefinition {
-	// fv := reflect.ValueOf(rv).FieldByName("endpoint")
-	fv := reflect.ValueOf(rv).FieldByName("handler")
-	fmt.Println(fv)
-	// for i := 0; i < rv.NumField(); i++ {
-	// 	f := rv.Field(i)
-	// 	// field := reflect.Indirect(reflect.ValueOf(f))
-	// 	// fmt.Println(f.Type().Field(0).Name)
-	// 	fmt.Println(reflect.TypeOf(f))
-	// }
-
 	rEndpoint := rv.FieldByName("endpoint")
 	endpoint := reflect.NewAt(rEndpoint.Type(), unsafe.Pointer(rEndpoint.UnsafeAddr())).Elem().Interface().(string)
 	rMethod := rv.FieldByName("method")
