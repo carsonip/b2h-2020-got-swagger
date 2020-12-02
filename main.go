@@ -6,6 +6,8 @@ import (
 	"github.com/devfacet/gocmd"
 	"io/ioutil"
 	"martiniExample/hack"
+	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -27,6 +29,9 @@ func main() {
 			Headers  string `short:"h" long:"headers" description:"request Headers copied from the browser in the format: :Method: <Method> :Path: <Path>, e.g. :Method: POST :Path: /api/aggregation/s/5630785994358784"`
 			Settings bool   `settings:"true" allow-unknown-arg:"true"`
 		} `command:"match" description:"match the request. Example requests:\n./martiniExample match -m get -p /api/s/5668600916475904/subscription/setting/featureFlag, \n./martiniExample match -h \":Method: POST :Path: /api/aggregation/s/5630785994358784\"\n --- "`
+		Init struct {
+			Settings bool   `settings:"true" allow-unknown-arg:"true"`
+		} `command:"init" description:"Generates routes.json"`
 	}{}
 
 	gocmd.HandleFlag("export", func(cmd *gocmd.Cmd, args []string) error {
@@ -39,9 +44,16 @@ func main() {
 		return nil
 	})
 
+	gocmd.HandleFlag("Init", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Printf("%s\n", strings.Join(cmd.FlagArgs("Init")[1:], " "))
+
+		buildRoutesJson()
+
+		return nil
+	})
+
 
 	gocmd.HandleFlag("Match", func(cmd *gocmd.Cmd, args []string) error {
-
 		method := ""
 		path := ""
 		if flags.Match.Headers == "" && (flags.Match.Method == "" || flags.Match.Path == "") {
@@ -61,6 +73,11 @@ func main() {
 		if flags.Match.Routes != ""{
 			routes = flags.Match.Routes
 		}
+
+		if _, err := os.Stat(routes); os.IsNotExist(err) {
+			buildRoutesJson()
+		}
+
 		matchRoute(routes, method, path)
 
 		return nil
@@ -99,4 +116,29 @@ func exportRoutes() {
 	r := m.Router
 	routes := hack.ExtractRoutes(r)
 	routes.Export()
+}
+
+
+func buildRoutesJson() {
+	dat, _ := ioutil.ReadFile("/Users/gregwoodcock/dev/pendo-appengine/src/pendo.io/server/server.go")
+		newFile := strings.Replace(string(dat), "/* HACK HERE */", "x := hack.ExtractRoutes(router)\n\tx.Export()\n\tpanic(\"foo\")", 1)
+		newFile = strings.Replace(string(newFile), "import (", "import (\n\t\"github.com/carsonip/b2h/hack\"", 1)
+		ioutil.WriteFile("/Users/gregwoodcock/dev/pendo-appengine/src/pendo.io/server/server.go", []byte(newFile), 0644)
+
+		c := exec.Command("go", "build", "-o", "appEngineHack", ".")
+		c.Dir = "~/dev/pendo-appengine/src/appengine"
+		c.Run()
+
+		c2 := exec.Command("./appEngineHack")
+		c2.Dir = "~/dev/pendo-appengine/src/appengine"
+		c2.Run()
+
+		c3 := exec.Command( "mv", "~/dev/pendo-appengine/src/appengine/routes.json", ".")
+		c3.Run()
+
+		c4 := exec.Command("rm", "appEngineHack")
+		c4.Dir = "~/dev/pendo-appengine/src/appengine"
+		c4.Run()
+
+		ioutil.WriteFile("~/dev/pendo-appengine/src/pendo.io/server/server.go", []byte(dat), 0644)
 }
