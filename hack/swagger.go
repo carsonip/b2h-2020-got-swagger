@@ -67,6 +67,9 @@ func writeRequestBody(w io.Writer, s Schema, indent int) {
 func writeQuerySchema(w io.Writer, s Schema, indent int) {
 	fmt.Fprintf(w, "%s- in: query\n", strings.Repeat(" ", indent))
 	fmt.Fprintf(w, "%sname: %s\n", strings.Repeat(" ", indent + 2), s.Name)
+	if s.Required {
+		fmt.Fprintf(w, "%srequired: true\n", strings.Repeat(" ", indent + 2))
+	}
 	fmt.Fprintf(w, "%sschema:\n", strings.Repeat(" ", indent + 2))
 	fmt.Fprintf(w, "%stype: %s\n", strings.Repeat(" ", indent + 4), s.Type)
 	if s.Type == FieldArray {
