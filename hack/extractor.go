@@ -1,8 +1,8 @@
 package hack
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/go-martini/martini"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,18 +10,19 @@ import (
 	"regexp"
 	"runtime"
 	"unsafe"
-	"encoding/json"
+
+	"github.com/go-martini/martini"
 )
 
 type routeHandler struct {
 	Path     string `json:"path"`
-	LineNo   int `json:"lineNo"`
+	LineNo   int    `json:"lineNo"`
 	FuncName string `json:"funcName"`
 }
 
 type RouteDefinition struct {
-	Method string `json:"method"`
-	Route string `json:"route"`
+	Method   string         `json:"method"`
+	Route    string         `json:"route"`
 	Handlers []routeHandler `json:"handlers"`
 	Schema Schema `json:"-"`
 }
@@ -70,7 +71,6 @@ func collectRoute(rRoutePtr reflect.Value) RouteDefinition {
 	method := getMethodFromRRoute(rRoute)
 
 	rHandlers := getRHandlersFromRRoute(rRoute)
-
 
 	return newRoute(method, pattern, rHandlers)
 }
@@ -136,6 +136,43 @@ func getHandlerMetadata(rHandler reflect.Value) (string, int, string, interface{
 func getRHandlerIntFromRHandler(rHandler reflect.Value) reflect.Value {
 	rHandlerPtr := reflect.NewAt(rHandler.Type(), unsafe.Pointer(rHandler.UnsafeAddr()))
 	return rHandlerPtr.Elem()
+}
+
+func ExtractRoutesDatarouter(r interface{}) RouteDefinitions {
+	var routes []RouteDefinition
+	rv := reflect.ValueOf(r)
+	rv = reflect.Indirect(rv)
+	rRoutes := rv.FieldByName("routeMap")
+
+	iter := rRoutes.MapRange()
+	for iter.Next() {
+		routeVal := iter.Value().Elem()
+		routeVal = reflect.Indirect(routeVal)
+		routes = append(routes, collectRouteDatarouter(routeVal))
+	}
+
+	return routes
+}
+
+func collectRouteDatarouter(rv reflect.Value) RouteDefinition {
+	rEndpoint := rv.FieldByName("endpoint")
+	endpoint := reflect.NewAt(rEndpoint.Type(), unsafe.Pointer(rEndpoint.UnsafeAddr())).Elem().Interface().(string)
+	rMethod := rv.FieldByName("method")
+	method := reflect.NewAt(rMethod.Type(), unsafe.Pointer(rMethod.UnsafeAddr())).Elem().Interface().(string)
+	routeDef := RouteDefinition{
+		Method: method,
+		Route:  endpoint,
+	}
+
+	rHandler := rv.FieldByName("handler")
+	file, line, name := getHandlerFuncName(rHandler)
+	routeDef.Handlers = append(routeDef.Handlers, routeHandler{
+		Path:     file,
+		LineNo:   line,
+		FuncName: name,
+	})
+
+	return routeDef
 }
 
 func GetFunctionName(i interface{}) string {
