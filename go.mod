@@ -1,4 +1,4 @@
-module martiniExample
+module github.com/carsonip/b2h-2020-got-swagger
 
 go 1.14
 

@@ -3,12 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/devfacet/gocmd"
 	"io/ioutil"
-	"martiniExample/hack"
-	"martiniExample/sampleapp"
 	"regexp"
 	"strings"
+
+	"github.com/devfacet/gocmd"
+
+	"github.com/carsonip/b2h-2020-got-swagger/hack"
+	"github.com/carsonip/b2h-2020-got-swagger/sampleapp"
 )
 
 func main() {
@@ -40,7 +42,6 @@ func main() {
 		return nil
 	})
 
-
 	gocmd.HandleFlag("Match", func(cmd *gocmd.Cmd, args []string) error {
 
 		method := ""
@@ -59,7 +60,7 @@ func main() {
 			method = flags.Match.Method
 			path = flags.Match.Path
 		}
-		if flags.Match.Routes != ""{
+		if flags.Match.Routes != "" {
 			routes = flags.Match.Routes
 		}
 		matchRoute(routes, method, path)
