@@ -467,3 +467,28 @@ func TestArrayOfRecursiveStruct(t *testing.T) {
 	}, schema)
 }
 
+func TestArrayOfArray(t *testing.T) {
+	type St struct {
+		Arrs [][]string
+	}
+	st := St{}
+	schema := StructToSchema(st)
+	assert.Equal(t, Schema{
+		Name: "",
+		Type: FieldObject,
+		Children: []Schema{
+			{
+				Name:      "Arrs",
+				Type:      FieldArray,
+				ArrayType: &Schema{
+					Name:      "",
+					Type:      FieldArray,
+					ArrayType: &Schema{
+						Type: FieldString,
+					},
+				},
+			},
+
+		},
+	}, schema)
+}

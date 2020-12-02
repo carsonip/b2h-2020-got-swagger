@@ -101,7 +101,7 @@ func getArrayType(elem reflect.Type, parentType reflect.Type) *Schema {
 	case reflect.Bool:
 		t = &Schema{Type: FieldBoolean}
 	case reflect.Slice, reflect.Array:
-		t = &Schema{Type: FieldArray} // TODO: recursive array definition
+		t = &Schema{Type: FieldArray, ArrayType: getArrayType(elem.Elem(), elem)}
 	case reflect.Struct:
 		if elem == parentType {
 			t = &Schema{Type: FieldObject, Recursive: true}
