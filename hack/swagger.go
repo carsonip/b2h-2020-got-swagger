@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -16,8 +17,11 @@ func NewSwaggerExporter(routeDefs RouteDefinitions) SwaggerExporter {
 	return SwaggerExporter{routeDefs: routeDefs}
 }
 
+var paramRegex = regexp.MustCompile(":([^/]*)")
+
 func formatRoute(route string) string {
 	route = strings.ReplaceAll(route, "?", "")
+	route = paramRegex.ReplaceAllString(route, "{$1}")
 	return route
 }
 
