@@ -13,7 +13,7 @@ import (
 func main() {
 	//printRoutes()
 	//exportRoutes()
-	routes := "/Users/tymon.solecki/dev/pendo-appengine/src/routes.json"
+	routes := "./routes.json"
 
 	// Init the app
 	flags := struct {
@@ -83,7 +83,7 @@ func matchRoute(path string, method string, match string) {
 		json.Unmarshal([]byte(dat), &routeDefs)
 		rMatch := routeDefs.MatchPath(method, match)
 		lastHandler := rMatch.Handlers[len(rMatch.Handlers)-1]
-		fmt.Printf("%v %v\n%v:%v", rMatch.Method, rMatch.Route, lastHandler.Path, lastHandler.LineNo)
+		fmt.Printf("\n  \033[0;32m%v\033[0;0m %v\n\n Is handled by:\n  > %v:%v\n", rMatch.Method, rMatch.Route, lastHandler.Path, lastHandler.LineNo)
 	}
 }
 
