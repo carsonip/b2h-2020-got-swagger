@@ -165,7 +165,7 @@ func collectRouteDatarouter(rv reflect.Value) RouteDefinition {
 	}
 
 	rHandler := rv.FieldByName("handler")
-	file, line, name := getHandlerFuncName(rHandler)
+	file, line, name := GetFileLineName(rHandler)
 	routeDef.Handlers = append(routeDef.Handlers, routeHandler{
 		Path:     file,
 		LineNo:   line,
