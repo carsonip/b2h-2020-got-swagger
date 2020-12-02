@@ -6,6 +6,7 @@ import (
 	"github.com/devfacet/gocmd"
 	"io/ioutil"
 	"martiniExample/hack"
+	"martiniExample/sampleapp"
 	"regexp"
 	"strings"
 )
@@ -23,7 +24,7 @@ func main() {
 		Match struct {
 			Routes   string `short:"r" long:"routes" description:"Path to your Routes.json file"`
 			Method   string `short:"m" long:"method" description:"request Method, e.g. POST"`
-			Path     string `short:"p", long:"path", description:"request Path, e.g./api/some/Path"`
+			Path     string `short:"p" long:"path" description:"request Path, e.g./api/some/Path"`
 			Headers  string `short:"h" long:"headers" description:"request Headers copied from the browser in the format: :Method: <Method> :Path: <Path>, e.g. :Method: POST :Path: /api/aggregation/s/5630785994358784"`
 			Settings bool   `settings:"true" allow-unknown-arg:"true"`
 		} `command:"match" description:"match the request. Example requests:\n./martiniExample match -m get -p /api/s/5668600916475904/subscription/setting/featureFlag, \n./martiniExample match -h \":Method: POST :Path: /api/aggregation/s/5630785994358784\"\n --- "`
@@ -88,14 +89,14 @@ func matchRoute(path string, method string, match string) {
 }
 
 func printRoutes() {
-	m := hack.GetMartini()
+	m := sampleapp.GetMartini()
 	r := m.Router
 	routes := hack.ExtractRoutes(r)
 	routes.Print()
 }
 
 func exportRoutes() {
-	m := hack.GetMartini()
+	m := sampleapp.GetMartini()
 	r := m.Router
 	routes := hack.ExtractRoutes(r)
 	routes.Export()

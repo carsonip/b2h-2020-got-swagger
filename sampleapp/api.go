@@ -1,4 +1,4 @@
-package hack
+package sampleapp
 
 import (
 	"github.com/go-martini/martini"
