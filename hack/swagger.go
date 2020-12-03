@@ -27,7 +27,7 @@ func formatRoute(route string) string {
 
 func formatMethod(method string) string {
 	if method == "*" {
-		method = "trace"  // TODO: Fix * method
+		method = "trace" // TODO: Fix * method
 	}
 	method = strings.ToLower(method)
 	return method
@@ -42,46 +42,46 @@ func writeSchemaWithoutName(w io.Writer, s Schema, indent int) {
 	if len(s.Children) > 0 {
 		fmt.Fprintf(w, "%sproperties:\n", strings.Repeat(" ", indent))
 		for _, c := range s.Children {
-			writeSchema(w, c, indent + 2)
+			writeSchema(w, c, indent+2)
 		}
 	}
 	if s.Type == FieldArray {
 		fmt.Fprintf(w, "%sitems:\n", strings.Repeat(" ", indent))
-		writeSchemaWithoutName(w, *s.ArrayType, indent + 2)
+		writeSchemaWithoutName(w, *s.ArrayType, indent+2)
 	}
 }
 
 func writeSchema(w io.Writer, s Schema, indent int) {
 	fmt.Fprintf(w, "%s%s:\n", strings.Repeat(" ", indent), s.Name)
-	writeSchemaWithoutName(w, s, indent + 2)
+	writeSchemaWithoutName(w, s, indent+2)
 }
 
 func writeRequestBody(w io.Writer, s Schema, indent int) {
 	fmt.Fprintf(w, "%srequestBody:\n", strings.Repeat(" ", indent))
-	fmt.Fprintf(w, "%scontent:\n", strings.Repeat(" ", indent + 2))
-	fmt.Fprintf(w, "%sapplication/json:\n", strings.Repeat(" ", indent + 4))
-	fmt.Fprintf(w, "%sschema:\n", strings.Repeat(" ", indent + 6))
-	writeSchemaWithoutName(w, s, indent + 8)
+	fmt.Fprintf(w, "%scontent:\n", strings.Repeat(" ", indent+2))
+	fmt.Fprintf(w, "%sapplication/json:\n", strings.Repeat(" ", indent+4))
+	fmt.Fprintf(w, "%sschema:\n", strings.Repeat(" ", indent+6))
+	writeSchemaWithoutName(w, s, indent+8)
 }
 
 func writeQuerySchema(w io.Writer, s Schema, indent int) {
 	fmt.Fprintf(w, "%s- in: query\n", strings.Repeat(" ", indent))
-	fmt.Fprintf(w, "%sname: %s\n", strings.Repeat(" ", indent + 2), s.Name)
+	fmt.Fprintf(w, "%sname: %s\n", strings.Repeat(" ", indent+2), s.Name)
 	if s.Required {
-		fmt.Fprintf(w, "%srequired: true\n", strings.Repeat(" ", indent + 2))
+		fmt.Fprintf(w, "%srequired: true\n", strings.Repeat(" ", indent+2))
 	}
-	fmt.Fprintf(w, "%sschema:\n", strings.Repeat(" ", indent + 2))
-	fmt.Fprintf(w, "%stype: %s\n", strings.Repeat(" ", indent + 4), s.Type)
+	fmt.Fprintf(w, "%sschema:\n", strings.Repeat(" ", indent+2))
+	fmt.Fprintf(w, "%stype: %s\n", strings.Repeat(" ", indent+4), s.Type)
 	if s.Type == FieldArray {
-		fmt.Fprintf(w, "%sitems:\n", strings.Repeat(" ", indent + 4))
-		fmt.Fprintf(w, "%stype: %s\n", strings.Repeat(" ", indent + 6), s.ArrayType.Type)
+		fmt.Fprintf(w, "%sitems:\n", strings.Repeat(" ", indent+4))
+		fmt.Fprintf(w, "%stype: %s\n", strings.Repeat(" ", indent+6), s.ArrayType.Type)
 	}
 }
 
 func writeParams(w io.Writer, s Schema, indent int) {
 	fmt.Fprintf(w, "%sparameters:\n", strings.Repeat(" ", indent))
 	for _, c := range s.Children {
-		writeQuerySchema(w, c, indent + 2)
+		writeQuerySchema(w, c, indent+2)
 	}
 
 }

@@ -73,4 +73,3 @@ func getBindStructIfExist(rHandlerInt reflect.Value) interface{} {
 	}
 	return nil
 }
-

@@ -15,7 +15,7 @@ const (
 	ExactMatch
 )
 
-func (routes RouteDefinitions) MatchPath(method string, path string) RouteDefinition{
+func (routes RouteDefinitions) MatchPath(method string, path string) RouteDefinition {
 	bestMatch := NoMatch
 	var bestRoute RouteDefinition
 
@@ -33,7 +33,7 @@ func (routes RouteDefinitions) MatchPath(method string, path string) RouteDefini
 	return bestRoute
 }
 
-func (route RouteDefinition) match(matchMethod string, path string) (RouteMatch) {
+func (route RouteDefinition) match(matchMethod string, path string) RouteMatch {
 	// add Any method matching support
 	match := MatchMethod(route, matchMethod)
 	if match == NoMatch {
@@ -74,4 +74,3 @@ func MatchMethod(r RouteDefinition, method string) RouteMatch {
 		return NoMatch
 	}
 }
-
