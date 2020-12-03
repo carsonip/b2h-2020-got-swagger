@@ -8,6 +8,7 @@ import (
 	"martiniExample/hack"
 	"os"
 	"os/exec"
+	"os/user"
 	"regexp"
 	"strings"
 )
@@ -94,6 +95,7 @@ func main() {
 
 func matchRoute(path string, method string, match string) {
 	if dat, err := ioutil.ReadFile(path); err != nil {
+		fmt.Println(err.Error())
 		fmt.Println("*** Failed to read routes.json, maybe you need to generate it first! ***")
 	} else {
 		routeDefs := hack.RouteDefinitions{}
@@ -120,25 +122,36 @@ func exportRoutes() {
 
 
 func buildRoutesJson() {
-	dat, _ := ioutil.ReadFile("/Users/gregwoodcock/dev/pendo-appengine/src/pendo.io/server/server.go")
+		usr, _ := user.Current()
+
+		dat, err := ioutil.ReadFile(usr.HomeDir + "/dev/pendo-appengine/src/pendo.io/server/server.go")
+		if err != nil {
+			panic(err.Error())
+		}
+
 		newFile := strings.Replace(string(dat), "/* HACK HERE */", "x := hack.ExtractRoutes(router)\n\tx.Export()\n\tpanic(\"foo\")", 1)
-		newFile = strings.Replace(string(newFile), "import (", "import (\n\t\"github.com/carsonip/b2h/hack\"", 1)
-		ioutil.WriteFile("/Users/gregwoodcock/dev/pendo-appengine/src/pendo.io/server/server.go", []byte(newFile), 0644)
+		if newFile == string(dat) {
+			panic("Nothing changed - did you add the magic comment?")
+		}
+
+		newFile = strings.Replace(newFile, "import (", "import (\n\t\"github.com/carsonip/b2h/hack\"", 1)
+		ioutil.WriteFile(usr.HomeDir + "/dev/pendo-appengine/src/pendo.io/server/server.go", []byte(newFile), 0644)
 
 		c := exec.Command("go", "build", "-o", "appEngineHack", ".")
-		c.Dir = "~/dev/pendo-appengine/src/appengine"
+		c.Dir = usr.HomeDir + "/dev/pendo-appengine/src/appengine"
 		c.Run()
 
+
 		c2 := exec.Command("./appEngineHack")
-		c2.Dir = "~/dev/pendo-appengine/src/appengine"
+		c2.Dir = usr.HomeDir + "/dev/pendo-appengine/src/appengine"
 		c2.Run()
 
-		c3 := exec.Command( "mv", "~/dev/pendo-appengine/src/appengine/routes.json", ".")
+		c3 := exec.Command( "mv", usr.HomeDir + "/dev/pendo-appengine/src/appengine/routes.json", ".")
 		c3.Run()
 
 		c4 := exec.Command("rm", "appEngineHack")
-		c4.Dir = "~/dev/pendo-appengine/src/appengine"
+		c4.Dir = usr.HomeDir + "/dev/pendo-appengine/src/appengine"
 		c4.Run()
 
-		ioutil.WriteFile("~/dev/pendo-appengine/src/pendo.io/server/server.go", []byte(dat), 0644)
+		ioutil.WriteFile(usr.HomeDir + "/dev/pendo-appengine/src/pendo.io/server/server.go", []byte(dat), 0644)
 }
