@@ -21,7 +21,7 @@ var paramRegex = regexp.MustCompile(":([^/]*)")
 
 func formatRoute(route string) string {
 	route = strings.ReplaceAll(route, "?", "")
-	route = paramRegex.ReplaceAllString(route, "{$1}")
+	// route = paramRegex.ReplaceAllString(route, "{$1}")
 	return route
 }
 
@@ -31,6 +31,16 @@ func formatMethod(method string) string {
 	}
 	method = strings.ToLower(method)
 	return method
+}
+
+var tagRegex = regexp.MustCompile("/api/ss?/:subscription(Name|Id)/(\\w*)/.*")
+
+func getTags(route string) []string {
+	tags := make([]string, 0)
+	if matches := tagRegex.FindStringSubmatch(route); len(matches) > 0 {
+		tags = append(tags, matches[2])
+	}
+	return tags
 }
 
 func (s SwaggerExporter) PrintYaml() {
@@ -86,6 +96,8 @@ func writeParams(w io.Writer, s Schema, indent int) {
 
 }
 
+var subNameRegex = regexp.MustCompile("/api/ss/.*")
+
 func (s SwaggerExporter) exportPaths(w io.Writer) {
 	fmt.Fprintln(w, "paths:")
 	lastRoute := ""
@@ -96,6 +108,11 @@ func (s SwaggerExporter) exportPaths(w io.Writer) {
 	})
 
 	for _, r := range s.routeDefs {
+		// NOTE: uncomment to get rid of /api/ss/:subscriptionName endpoints
+		if subNameRegex.MatchString(r.Route) {
+			continue
+		}
+
 		if r.Route != lastRoute {
 			fmt.Fprintf(w, "%s%s:\n", strings.Repeat(" ", 2), formatRoute(r.Route))
 		}
@@ -107,6 +124,14 @@ func (s SwaggerExporter) exportPaths(w io.Writer) {
 				writeRequestBody(w, r.Schema, 6)
 			default:
 				writeParams(w, r.Schema, 6)
+			}
+		}
+
+		tags := getTags(r.Route)
+		if len(tags) > 0 {
+			fmt.Fprintf(w, "%stags:\n", strings.Repeat(" ", 6))
+			for _, tag := range tags {
+				fmt.Fprintf(w, "%s- \"%s\"\n", strings.Repeat(" ", 6), tag)
 			}
 		}
 
