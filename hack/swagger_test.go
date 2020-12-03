@@ -6,5 +6,6 @@ import (
 )
 
 func TestFormatRoute(t *testing.T) {
-	assert.Equal(t, "/api/{id}/s/{sid}", formatRoute("/api/:id/s/:sid"))
+	// assert.Equal(t, "/api/{id}/s/{sid}", formatRoute("/api/:id/s/:sid"))
+	assert.Equal(t, "/api/:id/s/:sid", formatRoute("/api/:id/s/:sid"))
 }

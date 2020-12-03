@@ -24,7 +24,7 @@ type RouteDefinition struct {
 	Method   string         `json:"method"`
 	Route    string         `json:"route"`
 	Handlers []routeHandler `json:"handlers"`
-	Schema Schema `json:"-"`
+	Schema   Schema         `json:"-"`
 }
 
 type RouteDefinitions []RouteDefinition

@@ -351,8 +351,8 @@ func TestArrayOfStructs(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name:      "Inners",
-				Type:      FieldArray,
+				Name: "Inners",
+				Type: FieldArray,
 				ArrayType: &Schema{
 					Name: "",
 					Type: FieldObject,
@@ -364,7 +364,6 @@ func TestArrayOfStructs(t *testing.T) {
 					},
 				},
 			},
-
 		},
 	}, schema)
 }
@@ -383,8 +382,8 @@ func TestArrayOfPtrStructs(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name:      "Inners",
-				Type:      FieldArray,
+				Name: "Inners",
+				Type: FieldArray,
 				ArrayType: &Schema{
 					Name: "",
 					Type: FieldObject,
@@ -396,7 +395,6 @@ func TestArrayOfPtrStructs(t *testing.T) {
 					},
 				},
 			},
-
 		},
 	}, schema)
 }
@@ -412,14 +410,13 @@ func TestArrayOfPtrs(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name:      "StrPtrs",
-				Type:      FieldArray,
+				Name: "StrPtrs",
+				Type: FieldArray,
 				ArrayType: &Schema{
-					Name:      "",
-					Type:      FieldString,
+					Name: "",
+					Type: FieldString,
 				},
 			},
-
 		},
 	}, schema)
 }
@@ -435,10 +432,9 @@ func TestMap(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name:      "StrMap",
-				Type:      FieldObject,
+				Name: "StrMap",
+				Type: FieldObject,
 			},
-
 		},
 	}, schema)
 }
@@ -454,15 +450,14 @@ func TestArrayOfRecursiveStruct(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name:      "Ptrs",
-				Type:      FieldArray,
+				Name: "Ptrs",
+				Type: FieldArray,
 				ArrayType: &Schema{
 					Name:      "",
 					Type:      FieldObject,
 					Recursive: true,
 				},
 			},
-
 		},
 	}, schema)
 }
@@ -478,17 +473,16 @@ func TestArrayOfArray(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name:      "Arrs",
-				Type:      FieldArray,
+				Name: "Arrs",
+				Type: FieldArray,
 				ArrayType: &Schema{
-					Name:      "",
-					Type:      FieldArray,
+					Name: "",
+					Type: FieldArray,
 					ArrayType: &Schema{
 						Type: FieldString,
 					},
 				},
 			},
-
 		},
 	}, schema)
 }
@@ -504,10 +498,9 @@ func TestInterface(t *testing.T) {
 		Type: FieldObject,
 		Children: []Schema{
 			{
-				Name:      "Interface",
-				Type:      FieldString,
+				Name: "Interface",
+				Type: FieldString,
 			},
-
 		},
 	}, schema)
 }

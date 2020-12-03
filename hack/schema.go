@@ -20,14 +20,14 @@ const (
 
 // https://swagger.io/docs/specification/data-models/data-types/
 func (ft FieldType) String() string {
-	ftToStrMap := map[FieldType]string {
+	ftToStrMap := map[FieldType]string{
 		FieldInvalid: "INVALID",
-		FieldString: "string",
-		FieldNumber: "number",
+		FieldString:  "string",
+		FieldNumber:  "number",
 		FieldInteger: "integer",
 		FieldBoolean: "boolean",
-		FieldArray: "array",
-		FieldObject: "object",
+		FieldArray:   "array",
+		FieldObject:  "object",
 	}
 	return ftToStrMap[ft]
 }
