@@ -26,7 +26,7 @@ func main() {
 			Path     string `short:"p", long:"path", description:"request Path, e.g./api/some/Path"`
 			Headers  string `short:"h" long:"headers" description:"request Headers copied from the browser in the format: :Method: <Method> :Path: <Path>, e.g. :Method: POST :Path: /api/aggregation/s/5630785994358784"`
 			Settings bool   `settings:"true" allow-unknown-arg:"true"`
-		} `command:"match" description:"match the request. Example requests:\n./martiniExample match -m get -p /api/s/5668600916475904/subscription/setting/featureFlag, \n./martiniExample match -h \":Method: POST :Path: /api/aggregation/s/5630785994358784\"\n --- "`
+		} `command:"match" description:"match the request. Example requests:\n./sproute match -m get -p /api/s/5668600916475904/subscription/setting/featureFlag, \n./sproute match -h \":Method: POST :Path: /api/aggregation/s/5630785994358784\"\n --- "`
 	}{}
 
 	gocmd.HandleFlag("export", func(cmd *gocmd.Cmd, args []string) error {
@@ -48,8 +48,8 @@ func main() {
 			panic("Supply either Headers flag or Method and Path flags!")
 		}
 		if flags.Match.Headers != "" {
-			methodFromCurlRegex, _ := regexp.Compile(":Method: *([\\w/]+)")
-			pathFromCurlRegex, _ := regexp.Compile(":Path: *([\\w/]+)")
+			methodFromCurlRegex, _ := regexp.Compile(":[Mm]ethod: *([\\w/]+)")
+			pathFromCurlRegex, _ := regexp.Compile(":[Pp]ath: *([\\w/]+)")
 			methodMatch := methodFromCurlRegex.FindAllStringSubmatch(cmd.FlagArgs("Match")[1], -1)
 			pathMatch := pathFromCurlRegex.FindAllStringSubmatch(cmd.FlagArgs("Match")[1], -1)
 			method = methodMatch[0][1]
@@ -67,7 +67,7 @@ func main() {
 	})
 
 	gocmd.New(gocmd.Options{
-		Name:        "basic",
+		Name:        "sproute",
 		Version:     "1.0.0",
 		Description: "A basic app",
 		Flags:       &flags,
