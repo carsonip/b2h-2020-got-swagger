@@ -10,14 +10,16 @@ import (
 )
 
 type SwaggerExporter struct {
-	routeDefs RouteDefinitions
+	routeDefs   RouteDefinitions
+	tagRegex    *regexp.Regexp
+	ignoreRegex *regexp.Regexp
 }
 
-func NewSwaggerExporter(routeDefs RouteDefinitions) SwaggerExporter {
-	return SwaggerExporter{routeDefs: routeDefs}
+func NewSwaggerExporter(routeDefs RouteDefinitions, tagRegex *regexp.Regexp, ignoreRegex *regexp.Regexp) SwaggerExporter {
+	return SwaggerExporter{routeDefs: routeDefs, tagRegex: tagRegex, ignoreRegex: ignoreRegex}
 }
 
-var paramRegex = regexp.MustCompile(":([^/]*)")
+//var paramRegex = regexp.MustCompile(":([^/]*)")
 
 func formatRoute(route string) string {
 	route = strings.ReplaceAll(route, "?", "")
@@ -33,11 +35,9 @@ func formatMethod(method string) string {
 	return method
 }
 
-var tagRegex = regexp.MustCompile("/api/ss?/:subscription(Name|Id)/(\\w*)/.*")
-
-func getTags(route string) []string {
+func (s SwaggerExporter) getTags(route string) []string {
 	tags := make([]string, 0)
-	if matches := tagRegex.FindStringSubmatch(route); len(matches) > 0 {
+	if matches := s.tagRegex.FindStringSubmatch(route); len(matches) > 0 {
 		tags = append(tags, matches[2])
 	}
 	return tags
@@ -93,10 +93,7 @@ func writeParams(w io.Writer, s Schema, indent int) {
 	for _, c := range s.Children {
 		writeQuerySchema(w, c, indent+2)
 	}
-
 }
-
-var subNameRegex = regexp.MustCompile("/api/ss/.*")
 
 func (s SwaggerExporter) exportPaths(w io.Writer) {
 	fmt.Fprintln(w, "paths:")
@@ -108,8 +105,7 @@ func (s SwaggerExporter) exportPaths(w io.Writer) {
 	})
 
 	for _, r := range s.routeDefs {
-		// NOTE: uncomment to get rid of /api/ss/:subscriptionName endpoints
-		if subNameRegex.MatchString(r.Route) {
+		if s.ignoreRegex != nil && s.ignoreRegex.MatchString(r.Route) {
 			continue
 		}
 
@@ -127,11 +123,13 @@ func (s SwaggerExporter) exportPaths(w io.Writer) {
 			}
 		}
 
-		tags := getTags(r.Route)
-		if len(tags) > 0 {
-			fmt.Fprintf(w, "%stags:\n", strings.Repeat(" ", 6))
-			for _, tag := range tags {
-				fmt.Fprintf(w, "%s- \"%s\"\n", strings.Repeat(" ", 6), tag)
+		if s.tagRegex != nil {
+			tags := s.getTags(r.Route)
+			if len(tags) > 0 {
+				fmt.Fprintf(w, "%stags:\n", strings.Repeat(" ", 6))
+				for _, tag := range tags {
+					fmt.Fprintf(w, "%s- \"%s\"\n", strings.Repeat(" ", 6), tag)
+				}
 			}
 		}
 
